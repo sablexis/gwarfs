@@ -9,13 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Rules of The Gerrymandering
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+If you're reading this before Gwarfs, sorry to ruin the magic but I did this to make it equitable and so that everyone would be happy and enjoy the Gwarfs. Here was my thought process for how this should go down.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+1. Everyone should get at least one (1) award
+2. If the award you won by vote is on the meaner side then you should by default get a second
+3. There should be no outright sweeps
+    - If there are, second most voted individual takes it
+4. I am not eligible for any awards
 
-```{r cars}
+### Let's get gerrymandering !
+
+```{r }
 summary(cars)
 ```
 
