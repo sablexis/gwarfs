@@ -22,15 +22,70 @@ If you're reading this before Gwarfs, sorry to ruin the magic but I did this to 
 ### Let's get gerrymandering !
 
 ```{r }
-summary(cars)
+#import our libraries
+library(tidyverse)
+library(stringr)
+
+
+#import our data
+gwarfs_df <- read_csv("data/Gwarfs Data Cleaned.csv")
+gwarfs_df
+
+# lets do some text cleaning too
+gwarfs <- gwarfs_df %>%
+  mutate_all(funs(tolower))
+gwarfs
 ```
 
-## Including Plots
+## Finding The Winners
 
-You can also embed plots, for example:
+Doing some data wrangling on the results of the survey (as of 27/03/24)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+The Superlatives are as follows:
+"Most Likely to Leave Sackville and Never Come Back"  
+ [2] "Most Likely to Be Famous"                            
+ [3] "Host(ess) with The Most(ess)"                        
+ [4] "Most Likely to Be CEO by Our 5 Year Reunion"         
+ [5] "Party Foul"                                          
+ [6] "Most Likely to Be Late to The Function"              
+ [7] "Best Off-Campus Memory"                              
+ [8] "Best Harper Memory"                                  
+ [9] "M.V.P"                                               
+[10] "Always Allowed on AUX"                               
+[11] "Most Likely to Have an Insane post Sackville Glow Up"
+[12] "Funniest"                                            
+[13] "Biggest Yum Yucker"                                  
+[14] "Most Likely to End Up On The Most Wanted List"       
+[15] "Academic Weapon 💥"                                  
+[16] "Certified Yapper 🗣️"                                  
+[17] "Peaked In College"                                   
+[18] "Karaoke Legend(s) 🎤"                                
+[19] "Peaked In High School"
+
+```{r}
+
+
+# let's drop the last two columns, we can make them into a data frame later
+gwarfs <- gwarfs %>%
+  select(1:19)
+gwarfs
+
+
+# We want to see everyone's vote per superlative
+gwarfs_winner <- gwarfs %>%
+  # pivot longer so every superlative and the person nominated is an individual row
+  pivot_longer(1:19) %>%
+  rename(superlative =  name) %>%
+  # group by superlatives, goes 1-19 for each response
+  group_by(value, superlative) %>%
+  # count if there's a name value associated with the superlative
+  count() %>%
+  # pivot it wider so each superlative has an associated count for each name submitted
+  pivot_wider(id_cols = superlative, names_from = value, values_from = n, values_fill = 0)
+gwarfs_winner
+
+# woohoo! we've got a good table going baby
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
