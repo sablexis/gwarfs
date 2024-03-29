@@ -37,7 +37,7 @@ gwarfs <- gwarfs_df %>%
 gwarfs
 ```
 
-## Finding The Winners
+## Data Wrangling
 
 Doing some data wrangling on the results of the survey (as of 27/03/24)
 
@@ -85,6 +85,24 @@ gwarfs_winner <- gwarfs %>%
 gwarfs_winner
 
 # woohoo! we've got a good table going baby
+
+# caelan's name was spelt tons of different ways, let's try to clean this up
+gwarfs_caelan_clean <- gwarfs_winner %>%
+  select(starts_with("ca")) %>%
+  mutate(caelan_sum = `caelan` + `caelan d` + `caelan darling` + `calean`)
+gwarfs_caelan_clean
+
+# seperate out the sum column of all those caelans
+gwarfs_caelan_remove <- gwarfs_caelan_clean %>%
+  select(caelan_sum)
+gwarfs_caelan_remove
+
+# slap it back in there
+gwarfs_winner <- gwarfs_winner %>%
+  select(-c(8:11)) %>%
+  left_join(gwarfs_caelan_remove) %>%
+  rename(`caelan` = `caelan_sum`)
+gwarfs_winner
 
 ```
 
