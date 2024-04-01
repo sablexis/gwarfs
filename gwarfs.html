@@ -376,55 +376,15 @@ by default get a second</li>
 <div id="lets-get-gerrymandering" class="section level3">
 <h3>Let’s get gerrymandering !</h3>
 <pre class="r"><code>#import our libraries
-library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.4.1     ✔ purrr   1.0.2
-## ✔ tibble  3.2.1     ✔ dplyr   1.1.3
-## ✔ tidyr   1.3.0     ✔ stringr 1.5.1
-## ✔ readr   2.1.4     ✔ forcats 0.5.2
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(stringr)
+library(tidyverse)
+library(stringr)
+library(fuzzyjoin)
 
 
 #import our data
-gwarfs_df &lt;- read_csv(&quot;data/Gwarfs Data Cleaned.csv&quot;)</code></pre>
-<pre><code>## Rows: 16 Columns: 21
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (21): Most Likely to Leave Sackville and Never Come Back, Most Likely to...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>gwarfs_df</code></pre>
-<pre><code>## # A tibble: 16 × 21
-##    Most Likely to Leave Sackvill…¹ Most Likely to Be Fa…² Host(ess) with The M…³
-##    &lt;chr&gt;                           &lt;chr&gt;                  &lt;chr&gt;                 
-##  1 Sturge                          Nora                   Nora and Keira        
-##  2 Connor                          Olivia                 Zoe, Alivia, Abby     
-##  3 Keira                           Olivia                 Nora and Keira        
-##  4 Jocelyne                        Connor                 Zoe, Alivia, Abby     
-##  5 Brooke                          Spencer                Zoe, Alivia, Abby     
-##  6 Drew                            Olivia                 Spencer               
-##  7 Zoe                             Sabrina                Nora and Keira        
-##  8 Sabrina                         Bailey                 Nora and Keira        
-##  9 Sabrina                         Sturge                 Nora and Keira        
-## 10 Drew                            Sabrina                &lt;NA&gt;                  
-## 11 Connor                          Olivia                 &lt;NA&gt;                  
-## 12 Sturge                          Brooke                 &lt;NA&gt;                  
-## 13 Drew                            Nora                   &lt;NA&gt;                  
-## 14 &lt;NA&gt;                            &lt;NA&gt;                   &lt;NA&gt;                  
-## 15 &lt;NA&gt;                            &lt;NA&gt;                   &lt;NA&gt;                  
-## 16 &lt;NA&gt;                            &lt;NA&gt;                   &lt;NA&gt;                  
-## # ℹ abbreviated names: ¹​`Most Likely to Leave Sackville and Never Come Back`,
-## #   ²​`Most Likely to Be Famous`, ³​`Host(ess) with The Most(ess)`
-## # ℹ 18 more variables: `Most Likely to Be CEO by Our 5 Year Reunion` &lt;chr&gt;,
-## #   `Party Foul` &lt;chr&gt;, `Most Likely to Be Late to The Function` &lt;chr&gt;,
-## #   `Best Off-Campus Memory` &lt;chr&gt;, `Best Harper Memory` &lt;chr&gt;, M.V.P &lt;chr&gt;,
-## #   `Always Allowed on AUX` &lt;chr&gt;,
-## #   `Most Likely to Have an Insane post Sackville Glow Up` &lt;chr&gt;, …</code></pre>
-<pre class="r"><code># lets do some text cleaning too
+gwarfs_df &lt;- read_csv(&quot;data/Gwarfs Data Cleaned.csv&quot;)
+
+# lets do some text cleaning too
 gwarfs &lt;- gwarfs_df %&gt;%
   mutate_all(funs(tolower))</code></pre>
 <pre><code>## Warning: `funs()` was deprecated in dplyr 0.8.0.
@@ -466,8 +426,8 @@ gwarfs &lt;- gwarfs_df %&gt;%
 ## #   `Most Likely to Have an Insane post Sackville Glow Up` &lt;chr&gt;, …</code></pre>
 </div>
 </div>
-<div id="finding-the-winners" class="section level2">
-<h2>Finding The Winners</h2>
+<div id="data-analysis" class="section level2">
+<h2>Data Analysis</h2>
 <p>Doing some data wrangling on the results of the survey (as of
 27/03/24)</p>
 <p>The Superlatives are as follows: “Most Likely to Leave Sackville and
@@ -520,81 +480,368 @@ gwarfs</code></pre>
 ## #   `Best Off-Campus Memory` &lt;chr&gt;, `Best Harper Memory` &lt;chr&gt;, M.V.P &lt;chr&gt;,
 ## #   `Always Allowed on AUX` &lt;chr&gt;,
 ## #   `Most Likely to Have an Insane post Sackville Glow Up` &lt;chr&gt;, …</code></pre>
-<pre class="r"><code># We want to see everyone&#39;s vote per superlative
-gwarfs_winner &lt;- gwarfs %&gt;%
-  # pivot longer so every superlative and the person nominated is an individual row
-  pivot_longer(1:19) %&gt;%
-  rename(superlative =  name) %&gt;%
-  # group by superlatives, goes 1-19 for each response
-  group_by(value, superlative) %&gt;%
-  # count if there&#39;s a name value associated with the superlative
-  count() %&gt;%
-  # pivot it wider so each superlative has an associated count for each name submitted
-  pivot_wider(id_cols = superlative, names_from = value, values_from = n, values_fill = 0)
-gwarfs_winner</code></pre>
-<pre><code>## # A tibble: 19 × 65
-## # Groups:   superlative [19]
-##    superlative       abby alivia `anyone but spencer` bailey `bailey and olivia`
-##    &lt;chr&gt;            &lt;int&gt;  &lt;int&gt;                &lt;int&gt;  &lt;int&gt;               &lt;int&gt;
-##  1 Certified Yappe…     1      1                    0      0                   0
-##  2 Biggest Yum Yuc…     0      1                    0      3                   0
-##  3 Most Likely to …     0      1                    0      0                   0
-##  4 Peaked In Colle…     0      2                    0      0                   0
-##  5 Peaked In High …     0      3                    0      0                   0
-##  6 Always Allowed …     0      0                    1      1                   0
-##  7 Funniest             0      0                    0      3                   0
-##  8 M.V.P                0      0                    0      1                   0
-##  9 Most Likely to …     0      0                    0      1                   0
-## 10 Most Likely to …     0      0                    0      1                   0
-## 11 Most Likely to …     0      0                    0      0                  11
-## 12 Most Likely to …     0      0                    0      0                   0
-## 13 Most Likely to …     0      0                    0      0                   0
-## 14 Karaoke Legend(…     0      0                    0      0                   0
-## 15 Best Harper Mem…     0      0                    0      0                   0
-## 16 Party Foul           0      0                    0      0                   0
-## 17 Best Off-Campus…     0      0                    0      0                   0
-## 18 Academic Weapon…     0      0                    0      0                   0
-## 19 Host(ess) with …     0      0                    0      0                   0
-## # ℹ 59 more variables: brooke &lt;int&gt;, caelan &lt;int&gt;, `caelan d` &lt;int&gt;,
-## #   `caelan darling` &lt;int&gt;, calean &lt;int&gt;, connor &lt;int&gt;, `connor &amp; drew` &lt;int&gt;,
-## #   `connor c` &lt;int&gt;, `covid girls night` &lt;int&gt;, drew &lt;int&gt;,
-## #   `driving olivia to the hospital a million times` &lt;int&gt;, everyone &lt;int&gt;,
-## #   `fire alarm` &lt;int&gt;, `first year dance performance` &lt;int&gt;,
-## #   friendsgiving &lt;int&gt;, `friendsgiving dinner` &lt;int&gt;, `girls nights` &lt;int&gt;,
-## #   `going to the lake` &lt;int&gt;, `goya’s ban list….` &lt;int&gt;, `group hugs` &lt;int&gt;, …</code></pre>
-<pre class="r"><code># woohoo! we&#39;ve got a good table going baby
+<pre class="r"><code># I tried to do this multiple times, I&#39;m doing this the long way 
 
-gwarfs_winner_clean &lt;- gwarfs_winner %&gt;%
-  select(starts_with(&quot;ca&quot;)) %&gt;%
-  mutate(caelan_sum = `caelan` + `caelan d` + `caelan darling` + `calean`)</code></pre>
-<pre><code>## Adding missing grouping variables: `superlative`</code></pre>
-<pre class="r"><code>gwarfs_winner_clean</code></pre>
-<pre><code>## # A tibble: 19 × 6
-## # Groups:   superlative [19]
-##    superlative              caelan `caelan d` `caelan darling` calean caelan_sum
-##    &lt;chr&gt;                     &lt;int&gt;      &lt;int&gt;            &lt;int&gt;  &lt;int&gt;      &lt;int&gt;
-##  1 Certified Yapper 🗣️            2          0                0      0          2
-##  2 Biggest Yum Yucker            0          0                0      0          0
-##  3 Most Likely to Be CEO b…      0          0                0      0          0
-##  4 Peaked In College             0          0                0      1          1
-##  5 Peaked In High School         0          0                0      0          0
-##  6 Always Allowed on AUX         0          0                0      0          0
-##  7 Funniest                      0          0                0      0          0
-##  8 M.V.P                         2          1                0      0          3
-##  9 Most Likely to Be Famous      0          0                0      0          0
-## 10 Most Likely to End Up O…      6          0                0      0          6
-## 11 Most Likely to Be Late …      0          0                0      0          0
-## 12 Most Likely to Leave Sa…      0          0                0      0          0
-## 13 Most Likely to Have an …      0          0                1      0          1
-## 14 Karaoke Legend(s) 🎤          0          0                0      0          0
-## 15 Best Harper Memory            0          0                0      0          0
-## 16 Party Foul                    0          0                0      0          0
-## 17 Best Off-Campus Memory        0          0                0      0          0
-## 18 Academic Weapon 💥            0          0                0      0          0
-## 19 Host(ess) with The Most…      0          0                0      0          0</code></pre>
+# First let&#39;s get the ranks of all.....20 superlatives 
+
+leave_sack_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Most Likely to Leave Sackville and Never Come Back&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE)%&gt;%
+  drop_na()
+leave_sack_rank</code></pre>
+<pre><code>## # A tibble: 8 × 3
+##   superlative                                        name         n
+##   &lt;chr&gt;                                              &lt;chr&gt;    &lt;int&gt;
+## 1 Most Likely to Leave Sackville and Never Come Back drew         3
+## 2 Most Likely to Leave Sackville and Never Come Back connor       2
+## 3 Most Likely to Leave Sackville and Never Come Back sabrina      2
+## 4 Most Likely to Leave Sackville and Never Come Back sturge       2
+## 5 Most Likely to Leave Sackville and Never Come Back brooke       1
+## 6 Most Likely to Leave Sackville and Never Come Back jocelyne     1
+## 7 Most Likely to Leave Sackville and Never Come Back keira        1
+## 8 Most Likely to Leave Sackville and Never Come Back zoe          1</code></pre>
+<pre class="r"><code>famous_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Most Likely to Be Famous&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE)%&gt;%
+  drop_na()
+famous_rank</code></pre>
+<pre><code>## # A tibble: 8 × 3
+##   superlative              name        n
+##   &lt;chr&gt;                    &lt;chr&gt;   &lt;int&gt;
+## 1 Most Likely to Be Famous olivia      4
+## 2 Most Likely to Be Famous nora        2
+## 3 Most Likely to Be Famous sabrina     2
+## 4 Most Likely to Be Famous bailey      1
+## 5 Most Likely to Be Famous brooke      1
+## 6 Most Likely to Be Famous connor      1
+## 7 Most Likely to Be Famous spencer     1
+## 8 Most Likely to Be Famous sturge      1</code></pre>
+<pre class="r"><code>host_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Host(ess) with The Most(ess)&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+host_rank</code></pre>
+<pre><code>## # A tibble: 3 × 3
+##   superlative                  name                  n
+##   &lt;chr&gt;                        &lt;chr&gt;             &lt;int&gt;
+## 1 Host(ess) with The Most(ess) nora and keira        5
+## 2 Host(ess) with The Most(ess) zoe, alivia, abby     3
+## 3 Host(ess) with The Most(ess) spencer               1</code></pre>
+<pre class="r"><code>CEO_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Most Likely to Be CEO by Our 5 Year Reunion&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+CEO_rank</code></pre>
+<pre><code>## # A tibble: 3 × 3
+##   superlative                                 name       n
+##   &lt;chr&gt;                                       &lt;chr&gt;  &lt;int&gt;
+## 1 Most Likely to Be CEO by Our 5 Year Reunion connor     8
+## 2 Most Likely to Be CEO by Our 5 Year Reunion alivia     1
+## 3 Most Likely to Be CEO by Our 5 Year Reunion isaac      1</code></pre>
+<pre class="r"><code>foul_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Party Foul&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+foul_rank</code></pre>
+<pre><code>## # A tibble: 8 × 3
+##   superlative name                                n
+##   &lt;chr&gt;       &lt;chr&gt;                           &lt;int&gt;
+## 1 Party Foul  olivia kissing alivia’s brother     3
+## 2 Party Foul  zoe’s flood                         2
+## 3 Party Foul  covid girls night                   1
+## 4 Party Foul  drew                                1
+## 5 Party Foul  first year dance performance        1
+## 6 Party Foul  goya’s ban list….                   1
+## 7 Party Foul  nora dying at the bar               1
+## 8 Party Foul  nora dying at the bar…              1</code></pre>
+<pre class="r"><code>late_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Most Likely to Be Late to The Function&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+late_rank</code></pre>
+<pre><code>## # A tibble: 1 × 3
+##   superlative                            name                  n
+##   &lt;chr&gt;                                  &lt;chr&gt;             &lt;int&gt;
+## 1 Most Likely to Be Late to The Function bailey and olivia    11</code></pre>
+<pre class="r"><code>offCampus_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Best Off-Campus Memory&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+offCampus_rank</code></pre>
+<pre><code>## # A tibble: 10 × 3
+##    superlative            name                                               n
+##    &lt;chr&gt;                  &lt;chr&gt;                                          &lt;int&gt;
+##  1 Best Off-Campus Memory keiras third year birthday                         2
+##  2 Best Off-Campus Memory driving olivia to the hospital a million times     1
+##  3 Best Off-Campus Memory friendsgiving                                      1
+##  4 Best Off-Campus Memory friendsgiving dinner                               1
+##  5 Best Off-Campus Memory girls nights                                       1
+##  6 Best Off-Campus Memory going to the lake                                  1
+##  7 Best Off-Campus Memory group hugs                                         1
+##  8 Best Off-Campus Memory josiah hitting his head at pong tournament         1
+##  9 Best Off-Campus Memory pong tournament                                    1
+## 10 Best Off-Campus Memory sackville summer fundy trip                        1</code></pre>
+<pre class="r"><code>harper_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Best Harper Memory&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+harper_rank</code></pre>
+<pre><code>## # A tibble: 9 × 3
+##   superlative        name                                                  n
+##   &lt;chr&gt;              &lt;chr&gt;                                             &lt;int&gt;
+## 1 Best Harper Memory covid girls night                                     1
+## 2 Best Harper Memory fire alarm                                            1
+## 3 Best Harper Memory mario kart basement lounge                            1
+## 4 Best Harper Memory marlee’s bday, sex on beach                           1
+## 5 Best Harper Memory olivia harts drunk escapades in the mario costume     1
+## 6 Best Harper Memory olivia’s bday weekend                                 1
+## 7 Best Harper Memory powerpoint nights                                     1
+## 8 Best Harper Memory secret santa in the lounge                            1
+## 9 Best Harper Memory zoë burning her foot                                  1</code></pre>
+<pre class="r"><code>MVP_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;M.V.P&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+MVP_rank</code></pre>
+<pre><code>## # A tibble: 11 × 3
+##    superlative name              n
+##    &lt;chr&gt;       &lt;chr&gt;         &lt;int&gt;
+##  1 M.V.P       keira             4
+##  2 M.V.P       caelan            3
+##  3 M.V.P       bailey            1
+##  4 M.V.P       brooke            1
+##  5 M.V.P       connor            1
+##  6 M.V.P       drew              1
+##  7 M.V.P       isaac             1
+##  8 M.V.P       josiah            1
+##  9 M.V.P       kiera             1
+## 10 M.V.P       marlee            1
+## 11 M.V.P       spencer scott     1</code></pre>
+<pre class="r"><code>AUX_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Always Allowed on AUX&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+AUX_rank</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   superlative           name                   n
+##   &lt;chr&gt;                 &lt;chr&gt;              &lt;int&gt;
+## 1 Always Allowed on AUX marlee                 6
+## 2 Always Allowed on AUX connor                 2
+## 3 Always Allowed on AUX keira                  2
+## 4 Always Allowed on AUX spencer                2
+## 5 Always Allowed on AUX anyone but spencer     1
+## 6 Always Allowed on AUX bailey                 1</code></pre>
+<pre class="r"><code>gloUp_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Most Likely to Have an Insane post Sackville Glow Up&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+gloUp_rank</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   superlative                                          name         n
+##   &lt;chr&gt;                                                &lt;chr&gt;    &lt;int&gt;
+## 1 Most Likely to Have an Insane post Sackville Glow Up drew         3
+## 2 Most Likely to Have an Insane post Sackville Glow Up connor       2
+## 3 Most Likely to Have an Insane post Sackville Glow Up zoe          2
+## 4 Most Likely to Have an Insane post Sackville Glow Up caelan       1
+## 5 Most Likely to Have an Insane post Sackville Glow Up connor c     1
+## 6 Most Likely to Have an Insane post Sackville Glow Up jocelyne     1</code></pre>
+<pre class="r"><code>funny_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Funniest&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+funny_rank</code></pre>
+<pre><code>## # A tibble: 5 × 3
+##   superlative name         n
+##   &lt;chr&gt;       &lt;chr&gt;    &lt;int&gt;
+## 1 Funniest    sabrina      4
+## 2 Funniest    bailey       3
+## 3 Funniest    connor       2
+## 4 Funniest    everyone     1
+## 5 Funniest    zoe          1</code></pre>
+<pre class="r"><code>yumYuck_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Biggest Yum Yucker&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+yumYuck_rank</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   superlative        name        n
+##   &lt;chr&gt;              &lt;chr&gt;   &lt;int&gt;
+## 1 Biggest Yum Yucker drew        4
+## 2 Biggest Yum Yucker bailey      3
+## 3 Biggest Yum Yucker alivia      1
+## 4 Biggest Yum Yucker isaac       1
+## 5 Biggest Yum Yucker olivia      1
+## 6 Biggest Yum Yucker spencer     1</code></pre>
+<pre class="r"><code>mostWanted_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Most Likely to End Up On The Most Wanted List&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+mostWanted_rank</code></pre>
+<pre><code>## # A tibble: 7 × 3
+##   superlative                                   name         n
+##   &lt;chr&gt;                                         &lt;chr&gt;    &lt;int&gt;
+## 1 Most Likely to End Up On The Most Wanted List caelan       6
+## 2 Most Likely to End Up On The Most Wanted List sturge       3
+## 3 Most Likely to End Up On The Most Wanted List bailey       1
+## 4 Most Likely to End Up On The Most Wanted List jocelyn      1
+## 5 Most Likely to End Up On The Most Wanted List jocelyne     1
+## 6 Most Likely to End Up On The Most Wanted List spencer      1
+## 7 Most Likely to End Up On The Most Wanted List sturge,      1</code></pre>
+<pre class="r"><code>weapon_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Academic Weapon 💥&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+weapon_rank</code></pre>
+<pre><code>## # A tibble: 5 × 3
+##   superlative        name         n
+##   &lt;chr&gt;              &lt;chr&gt;    &lt;int&gt;
+## 1 Academic Weapon 💥 isaac        5
+## 2 Academic Weapon 💥 zoe          5
+## 3 Academic Weapon 💥 jocelyne     1
+## 4 Academic Weapon 💥 marlee       1
+## 5 Academic Weapon 💥 spencer      1</code></pre>
+<pre class="r"><code>yapper_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Certified Yapper 🗣&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+yapper_rank</code></pre>
+<pre><code>## # A tibble: 9 × 3
+##   superlative        name         n
+##   &lt;chr&gt;              &lt;chr&gt;    &lt;int&gt;
+## 1 Certified Yapper 🗣️ jocelyne     3
+## 2 Certified Yapper 🗣️ caelan       2
+## 3 Certified Yapper 🗣️ isaac        2
+## 4 Certified Yapper 🗣️ zoe          2
+## 5 Certified Yapper 🗣️ abby         1
+## 6 Certified Yapper 🗣️ alivia       1
+## 7 Certified Yapper 🗣️ drew         1
+## 8 Certified Yapper 🗣️ sab          1
+## 9 Certified Yapper 🗣️ spencer      1</code></pre>
+<pre class="r"><code>peakedCollege_rank &lt;- gwarfs %&gt;%
+  pivot_longer(
+    cols = starts_with(&quot;Peaked In College&quot;),
+    names_to = &quot;superlative&quot;,
+    values_to = &quot;name&quot;) %&gt;%
+  count(superlative, name, sort = TRUE) %&gt;%
+  drop_na()
+peakedCollege_rank</code></pre>
+<pre><code>## # A tibble: 5 × 3
+##   superlative       name                            n
+##   &lt;chr&gt;             &lt;chr&gt;                       &lt;int&gt;
+## 1 Peaked In College spencer                         4
+## 2 Peaked In College alivia                          2
+## 3 Peaked In College caelan                          1
+## 4 Peaked In College i don’t want to answer this     1
+## 5 Peaked In College isaac                           1</code></pre>
+<pre class="r"><code># bind all these columns back together 
+
+sup_winners &lt;- leave_sack_rank %&gt;%
+  bind_cols(famous_rank)</code></pre>
+<pre><code>## New names:
+## • `superlative` -&gt; `superlative...1`
+## • `name` -&gt; `name...2`
+## • `n` -&gt; `n...3`
+## • `superlative` -&gt; `superlative...4`
+## • `name` -&gt; `name...5`
+## • `n` -&gt; `n...6`</code></pre>
+<pre class="r"><code>sup_winners</code></pre>
+<pre><code>## # A tibble: 8 × 6
+##   superlative...1                  name...2 n...3 superlative...4 name...5 n...6
+##   &lt;chr&gt;                            &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;           &lt;chr&gt;    &lt;int&gt;
+## 1 Most Likely to Leave Sackville … drew         3 Most Likely to… olivia       4
+## 2 Most Likely to Leave Sackville … connor       2 Most Likely to… nora         2
+## 3 Most Likely to Leave Sackville … sabrina      2 Most Likely to… sabrina      2
+## 4 Most Likely to Leave Sackville … sturge       2 Most Likely to… bailey       1
+## 5 Most Likely to Leave Sackville … brooke       1 Most Likely to… brooke       1
+## 6 Most Likely to Leave Sackville … jocelyne     1 Most Likely to… connor       1
+## 7 Most Likely to Leave Sackville … keira        1 Most Likely to… spencer      1
+## 8 Most Likely to Leave Sackville … zoe          1 Most Likely to… sturge       1</code></pre>
 <p>Note that the <code>echo = FALSE</code> parameter was added to the
 code chunk to prevent printing of the R code that generated the
 plot.</p>
+</div>
+<div id="unused-code" class="section level2">
+<h2>Unused Code</h2>
+<pre class="r"><code># # We want to see everyone&#39;s vote per superlative
+# gwarfs_winner &lt;- gwarfs %&gt;%
+#   # pivot longer so every superlative and the person nominated is an individual row
+#   pivot_longer(1:19) %&gt;%
+#   rename(superlative =  name) %&gt;%
+#   # group by superlatives, goes 1-19 for each response
+#   group_by(value, superlative) %&gt;%
+#   # count if there&#39;s a name value associated with the superlative
+#   count() %&gt;%
+#   # pivot it wider so each superlative has an associated count for each name submitted
+#   pivot_wider(id_cols = superlative, names_from = value, values_from = n, values_fill = 0)
+# gwarfs_winner
+# 
+# # woohoo! we&#39;ve got a good table going baby
+# 
+# # caelan&#39;s name was spelt tons of different ways, let&#39;s try to clean this up
+# gwarfs_caelan_clean &lt;- gwarfs_winner %&gt;%
+#   select(starts_with(&quot;ca&quot;)) %&gt;%
+#   mutate(caelan_sum = `caelan` + )
+# gwarfs_caelan_clean
+# 
+# # seperate out the sum column of all those caelans
+# gwarfs_caelan_remove &lt;- gwarfs_caelan_clean %&gt;%
+#   select(caelan_sum)
+# gwarfs_caelan_remove
+# 
+# # slap it back in there
+# gwarfs_winner &lt;- gwarfs_winner %&gt;%
+#   select(-c(8:11)) %&gt;%
+#   left_join(gwarfs_caelan_remove) %&gt;%
+#   rename(`caelan` = `caelan_sum`)
+# gwarfs_winner</code></pre>
 </div>
 
 

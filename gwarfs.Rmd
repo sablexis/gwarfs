@@ -21,23 +21,25 @@ If you're reading this before Gwarfs, sorry to ruin the magic but I did this to 
 
 ### Let's get gerrymandering !
 
-```{r }
+```{r, message= FALSE}
 #import our libraries
 library(tidyverse)
 library(stringr)
+library(fuzzyjoin)
+library(janitor)
 
 
 #import our data
 gwarfs_df <- read_csv("data/Gwarfs Data Cleaned.csv")
-gwarfs_df
 
 # lets do some text cleaning too
 gwarfs <- gwarfs_df %>%
   mutate_all(funs(tolower))
 gwarfs
+
 ```
 
-## Data Wrangling
+## Data Analysis 
 
 Doing some data wrangling on the results of the survey (as of 27/03/24)
 
@@ -70,40 +72,307 @@ gwarfs <- gwarfs %>%
   select(1:19)
 gwarfs
 
+# I tried to do this multiple times, I'm doing this the long way 
 
-# We want to see everyone's vote per superlative
-gwarfs_winner <- gwarfs %>%
-  # pivot longer so every superlative and the person nominated is an individual row
-  pivot_longer(1:19) %>%
-  rename(superlative =  name) %>%
-  # group by superlatives, goes 1-19 for each response
-  group_by(value, superlative) %>%
-  # count if there's a name value associated with the superlative
-  count() %>%
-  # pivot it wider so each superlative has an associated count for each name submitted
-  pivot_wider(id_cols = superlative, names_from = value, values_from = n, values_fill = 0)
-gwarfs_winner
+# First let's get the ranks of all.....20 superlatives 
 
-# woohoo! we've got a good table going baby
+leave_sack_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Most Likely to Leave Sackville and Never Come Back"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE)%>%
+  drop_na()
+leave_sack_rank
 
-# caelan's name was spelt tons of different ways, let's try to clean this up
-gwarfs_caelan_clean <- gwarfs_winner %>%
-  select(starts_with("ca")) %>%
-  mutate(caelan_sum = `caelan` + `caelan d` + `caelan darling` + `calean`)
-gwarfs_caelan_clean
+famous_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Most Likely to Be Famous"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE)%>%
+  drop_na()
+famous_rank
 
-# seperate out the sum column of all those caelans
-gwarfs_caelan_remove <- gwarfs_caelan_clean %>%
-  select(caelan_sum)
-gwarfs_caelan_remove
+host_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Host(ess) with The Most(ess)"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+host_rank
 
-# slap it back in there
-gwarfs_winner <- gwarfs_winner %>%
-  select(-c(8:11)) %>%
-  left_join(gwarfs_caelan_remove) %>%
-  rename(`caelan` = `caelan_sum`)
-gwarfs_winner
+CEO_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Most Likely to Be CEO by Our 5 Year Reunion"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+CEO_rank
+
+foul_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Party Foul"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+foul_rank
+
+late_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Most Likely to Be Late to The Function"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+late_rank
+
+offCampus_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Best Off-Campus Memory"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+offCampus_rank
+
+harper_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Best Harper Memory"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+harper_rank
+
+MVP_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("M.V.P"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+MVP_rank
+
+AUX_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Always Allowed on AUX"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+AUX_rank
+
+gloUp_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Most Likely to Have an Insane post Sackville Glow Up"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+gloUp_rank
+
+funny_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Funniest"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+funny_rank
+
+yumYuck_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Biggest Yum Yucker"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+yumYuck_rank
+
+mostWanted_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Most Likely to End Up On The Most Wanted List"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+mostWanted_rank
+
+weapon_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Academic Weapon 💥"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+weapon_rank
+
+yapper_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Certified Yapper 🗣"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+yapper_rank
+
+peakedCollege_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Peaked In College"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+peakedCollege_rank
+
+karaoke_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Karaoke Legend(s) 🎤"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+karaoke_rank
+
+HS_rank <- gwarfs %>%
+  pivot_longer(
+    cols = starts_with("Peaked In High School"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+HS_rank
+
+# bind all these columns back together 
+
+# sup_winners <- leave_sack_rank %>%
+#   bind_cols(famous_rank)
+# sup_winners
+
+
+
+
+
 
 ```
 
+
+```{r}
+# Now lets work on the people's choices
+
+peoples_choice <- gwarfs_df %>%
+  select(20:21)
+peoples_choice
+
+```
+
+### Party Foul Wrangling
+
+```{r}
+# while the moment might be the same, people expressed them in different ways
+# so we've gotta wrangle our data to count effectively
+
+# let's subset only that column 
+foul_df <- gwarfs %>%
+  select("Party Foul")
+foul_df
+
+# then lets replace any istance of olivia with olivia kissing
+foul_df$`Party Foul` <-
+  ifelse(str_detect(foul_df$`Party Foul`, "olivia"), "olivia kissing", foul_df$`Party Foul`)
+
+# then lets replace any istance of isaac with isaac yarf
+foul_df$`Party Foul` <-
+  ifelse(str_detect(foul_df$`Party Foul`, "isaac"), "isaac yarf", foul_df$`Party Foul`)
+
+# then lets replace any istance of nora with nora puking on drew
+foul_df$`Party Foul` <-
+  ifelse(str_detect(foul_df$`Party Foul`, "nora"), "nora puking on drew", foul_df$`Party Foul`)
+
+foul_df
+
+foul_rank <- foul_df %>%
+  pivot_longer(
+    cols = starts_with("Party Foul"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+foul_rank
+```
+
+
+### Harper Memories Wrangling
+
+```{r}
+# let's subset only that column 
+harper_df <- gwarfs %>%
+  select("Best Harper Memory")
+harper_df
+
+# then lets replace any istance of olivia with olivia kissing
+harper_df$`Best Harper Memory` <-
+  ifelse(str_detect(harper_df$`Best Harper Memory`, "olivia"), "olivia's birthday/mario costume", harper_df$`Best Harper Memory`)
+
+harper_df
+
+harper_rank <- harper_df %>%
+  pivot_longer(
+    cols = starts_with("Best Harper Memory"),
+    names_to = "superlative",
+    values_to = "name") %>%
+  count(superlative, name, sort = TRUE) %>%
+  drop_na()
+harper_rank
+```
+
+
+
+```{r}
+# let's put these columns back together!
+```
+
+
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Unused Code
+
+```{r}
+# # We want to see everyone's vote per superlative
+# gwarfs_winner <- gwarfs %>%
+#   # pivot longer so every superlative and the person nominated is an individual row
+#   pivot_longer(1:19) %>%
+#   rename(superlative =  name) %>%
+#   # group by superlatives, goes 1-19 for each response
+#   group_by(value, superlative) %>%
+#   # count if there's a name value associated with the superlative
+#   count() %>%
+#   # pivot it wider so each superlative has an associated count for each name submitted
+#   pivot_wider(id_cols = superlative, names_from = value, values_from = n, values_fill = 0)
+# gwarfs_winner
+# 
+# # woohoo! we've got a good table going baby
+# 
+# # caelan's name was spelt tons of different ways, let's try to clean this up
+# gwarfs_caelan_clean <- gwarfs_winner %>%
+#   select(starts_with("ca")) %>%
+#   mutate(caelan_sum = `caelan` + )
+# gwarfs_caelan_clean
+# 
+# # seperate out the sum column of all those caelans
+# gwarfs_caelan_remove <- gwarfs_caelan_clean %>%
+#   select(caelan_sum)
+# gwarfs_caelan_remove
+# 
+# # slap it back in there
+# gwarfs_winner <- gwarfs_winner %>%
+#   select(-c(8:11)) %>%
+#   left_join(gwarfs_caelan_remove) %>%
+#   rename(`caelan` = `caelan_sum`)
+# gwarfs_winner
+```
+
